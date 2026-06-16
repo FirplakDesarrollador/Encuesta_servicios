@@ -1,6 +1,9 @@
 import { login, signup } from './actions'
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+    const params = await searchParams;
+    const error = params?.error;
+
     return (
         <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
             <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-xl">
@@ -15,6 +18,19 @@ export default function LoginPage() {
                         Inicie sesión en su cuenta
                     </p>
                 </div>
+
+                {error && (
+                    <div className="rounded-md bg-red-50 p-4">
+                        <div className="flex">
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Error de Autenticación</h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <p>{decodeURIComponent(error)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <form className="mt-8 space-y-6">
                     <div className="space-y-4">

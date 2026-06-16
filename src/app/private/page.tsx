@@ -3,7 +3,8 @@ import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import CopyLinkButton from '@/components/CopyLinkButton'
-
+import TestWhatsAppButton from '@/components/TestWhatsAppButton'
+import TestEmailButton from '@/components/TestEmailButton'
 export const metadata = {
     title: 'Dashboard - Firplak',
     description: 'Panel de administración de evaluaciones de servicio',
@@ -56,34 +57,31 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
     }
 
-    // Fetch services for the "Generate Links" section
-    let services = []
+    // Fetch searched service if 'q' is present
+    let searchedService: any = null
     if (q) {
         // Search in 'Servicios'
-        const { data: s1 } = await supabase.from('Servicios').select('*').ilike('consecutivo', `%${q}%`).limit(10)
-        // Search in 'Informe_queja_SAP' (if numeric)
-        let s2 = []
-        if (!isNaN(Number(q))) {
-            const { data } = await supabase.from('Informe_queja_SAP').select('*').eq('Consecutivo', Number(q)).limit(10)
-            s2 = data || []
+        const { data: s1 } = await supabase.from('Servicios').select('*').ilike('consecutivo', `%${q}%`).limit(1)
+        if (s1 && s1.length > 0) {
+            searchedService = { ...s1[0], source_table: 'Servicios' }
+        } else if (!isNaN(Number(q))) {
+            const { data: s2 } = await supabase.from('Informe_queja_SAP').select('*').eq('Consecutivo', Number(q)).limit(1)
+            if (s2 && s2.length > 0) {
+                searchedService = { 
+                    ...s2[0], 
+                    id: s2[0]['#'], 
+                    consecutivo: s2[0].Consecutivo.toString(), 
+                    tipo_de_servicio: s2[0]['Tipo de Llamada'] || 'Queja SAP',
+                    source_table: 'Informe_queja_SAP' 
+                }
+            }
         }
-        // Search in 'Servicios_Distribuidor'
-        const { data: s3 } = await supabase.from('Servicios_Distribuidor').select('*').ilike('consecutivo', `%${q}%`).limit(10)
-
-        services = [
-            ...(s1 || []).map(s => ({ ...s, source_table: 'Servicios' })),
-            ...(s2 || []).map(s => ({ 
-                ...s, 
-                id: s['#'], 
-                consecutivo: s.Consecutivo.toString(), 
-                tipo_de_servicio: s['Tipo de Llamada'] || 'Queja SAP',
-                source_table: 'Informe_queja_SAP' 
-            })),
-            ...(s3 || []).map(s => ({ ...s, source_table: 'Servicios_Distribuidor' }))
-        ]
-    } else {
-        const { data: s } = await supabase.from('Servicios').select('*').order('created_at', { ascending: false }).limit(20)
-        services = (s || []).map(s => ({ ...s, source_table: 'Servicios' }))
+        if (!searchedService) {
+            const { data: s3 } = await supabase.from('Servicios_Distribuidor').select('*').ilike('consecutivo', `%${q}%`).limit(1)
+            if (s3 && s3.length > 0) {
+                searchedService = { ...s3[0], source_table: 'Servicios_Distribuidor' }
+            }
+        }
     }
 
     const signOut = async () => {
@@ -210,72 +208,63 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </div>
                 </div>
 
-                {/* Section: Generate Links */}
-                <div className="space-y-4 animate-fade-in-up delay-300">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="space-y-1">
-                            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Generador de Links de Encuesta</h2>
-                            <p className="text-xs text-gray-500">Busca y copia el link específico de cada servicio.</p>
-                        </div>
-                        <form className="w-full sm:w-72 relative group">
-                            <input
-                                type="text"
-                                name="q"
-                                placeholder="Buscar por consecutivo..."
-                                defaultValue={q}
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 group-hover:border-gray-300 shadow-sm"
-                            />
-                            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            {q && (
-                                <Link href="/private" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
-                                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </Link>
-                            )}
-                        </form>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {services?.map((service: any) => (
-                            <div key={service.id} className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col justify-between gap-3 group hover:border-indigo-200 transition-all duration-200">
-                                <div className="flex items-start justify-between">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                            {service.source_table === 'Informe_queja_SAP' ? 'QUEJA SAP' : (service.tipo_de_servicio?.replace(/_/g, ' ') || 'Servicio Técnico')}
-                                        </p>
-                                        <p className="text-sm font-bold text-gray-900">{service.consecutivo}</p>
-                                    </div>
-                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <CopyLinkButton consecutivo={service.consecutivo} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="h-px bg-gray-200"></div>
+                {/* Removed Generate Links Section */}
 
                 {/* Section: History */}
                 <div className="space-y-4 animate-fade-in-up delay-400">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Historial de Evaluaciones</h2>
-                        <Link
-                            href="/evaluar"
-                            target="_blank"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200 transition-all duration-200 no-underline"
-                        >
-                            Formulario General
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <form className="relative w-full sm:w-auto">
+                                <input
+                                    type="text"
+                                    name="q"
+                                    placeholder="Buscar y generar link..."
+                                    defaultValue={q || ''}
+                                    className="w-56 pl-8 pr-6 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
+                                />
+                                <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                {q && (
+                                    <Link href="/private" className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </Link>
+                                )}
+                            </form>
+                            <TestWhatsAppButton />
+                            <TestEmailButton />
+                            <Link
+                                href="/evaluar"
+                                target="_blank"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200 transition-all duration-200 no-underline"
+                            >
+                                Formulario General
+                            </Link>
+                        </div>
                     </div>
+
+                    {q && (
+                        <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            {searchedService ? (
+                                <>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                                            {searchedService.source_table === 'Informe_queja_SAP' ? 'QUEJA SAP' : (searchedService.tipo_de_servicio?.replace(/_/g, ' ') || 'Servicio Técnico')}
+                                        </p>
+                                        <p className="text-sm font-bold text-indigo-900">{searchedService.consecutivo}</p>
+                                    </div>
+                                    <CopyLinkButton consecutivo={searchedService.consecutivo} />
+                                </>
+                            ) : (
+                                <p className="text-sm text-indigo-600">No se encontró ningún servicio con el consecutivo "{q}".</p>
+                            )}
+                        </div>
+                    )}
 
                     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">

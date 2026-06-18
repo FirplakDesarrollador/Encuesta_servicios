@@ -239,6 +239,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                             <TestWhatsAppButton />
                             <TestEmailButton />
                             <Link
+                                href="/private/listado-personas"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition-all duration-200 no-underline"
+                            >
+                                Listado a Encuestar
+                            </Link>
+                            <Link
                                 href="/evaluar"
                                 target="_blank"
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold hover:bg-gray-200 transition-all duration-200 no-underline"

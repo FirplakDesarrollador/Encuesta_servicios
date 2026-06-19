@@ -30,6 +30,12 @@ export default async function ListadoPersonasPage() {
         console.error('Error fetching listado:', error)
     }
 
+    const personasValidas = personas?.filter(persona => {
+        const telefono = persona.Consumidores?.telefono || persona.Consumidores?.celular || persona.telefono || persona.celular;
+        const correo = persona.Consumidores?.correo_electronico || persona.Consumidores?.correo || persona.Consumidores?.email || persona.correo || persona.email;
+        return Boolean(telefono || correo);
+    }) || [];
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
             {/* Nav */}
@@ -56,7 +62,7 @@ export default async function ListadoPersonasPage() {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Personas a las que se les enviará la encuesta</h2>
                         <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">
-                            {personas?.length || 0} registros este mes
+                            {personasValidas.length} registros este mes
                         </span>
                     </div>
 
@@ -73,7 +79,7 @@ export default async function ListadoPersonasPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(!personas || personas.length === 0) ? (
+                                    {personasValidas.length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="text-center py-16 px-4">
                                                 <div className="text-gray-300 mb-3">
@@ -86,7 +92,7 @@ export default async function ListadoPersonasPage() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        personas.map((persona) => (
+                                        personasValidas.map((persona) => (
                                             <tr key={persona.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors duration-150">
                                                 <td className="px-5 py-3.5 text-gray-800 font-bold text-sm">
                                                     {persona.consecutivo || `#${persona.id}`}

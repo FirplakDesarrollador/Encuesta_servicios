@@ -33,6 +33,11 @@ export default async function ListadoPersonasPage() {
     const personasValidas = personas?.filter(persona => {
         const telefono = persona.Consumidores?.telefono || persona.Consumidores?.celular || persona.telefono || persona.celular;
         const correo = persona.Consumidores?.correo_electronico || persona.Consumidores?.correo || persona.Consumidores?.email || persona.correo || persona.email;
+        
+        if (correo?.toLowerCase().trim() === 'notiene@correo.com') {
+            return false;
+        }
+
         return Boolean(telefono || correo);
     }) || [];
 

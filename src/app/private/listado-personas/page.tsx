@@ -20,6 +20,9 @@ export default async function ListadoPersonasPage() {
             Consumidores (*)
         `)
         .eq('estado', false)
+        .neq('aprobacion_director->>estado', 'Pendiente')
+        .neq('aprobacion_logistica->>estado', 'Pendiente')
+        .neq('aprobacion_mac->>estado', 'Pendiente')
         .gte('fecha_cierre', firstDayOfMonth)
         .order('fecha_cierre', { ascending: false })
 

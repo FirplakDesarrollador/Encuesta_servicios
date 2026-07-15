@@ -4,7 +4,7 @@ import { sendWhatsAppMessage, sendWhatsAppTemplate } from '@/utils/whatsapp';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { to, message, templateName, languageCode } = body;
+    const { to, message, templateName, languageCode, components } = body;
 
     if (!to) {
       return NextResponse.json({ error: 'El campo "to" (número de destino) es requerido' }, { status: 400 });
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
 
     // Si se envía un templateName, enviamos una plantilla
     if (templateName) {
-      result = await sendWhatsAppTemplate(to, templateName, languageCode || 'es');
+      result = await sendWhatsAppTemplate(to, templateName, languageCode || 'es', components);
     } 
     // Si se envía un mensaje, enviamos un texto libre
     else if (message) {

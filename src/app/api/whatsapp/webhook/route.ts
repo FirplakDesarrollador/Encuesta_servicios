@@ -44,7 +44,7 @@ export async function POST(request: Request) {
             console.log(`Mensaje recibido de ${from}: ${msgBody}`);
             
             // Responder automáticamente al usuario
-            const replyText = `¡Hola! He recibido tu mensaje: "${msgBody}". En un momento te compartiré el enlace de la encuesta.`;
+            const replyText = `Hola`;
             
             // Llamamos a la función para enviar texto
             await sendWhatsAppMessage(from, replyText);

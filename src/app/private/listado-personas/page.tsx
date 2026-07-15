@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import SendWhatsAppButton from './SendWhatsAppButton'
+import TestWhatsAppModal from './TestWhatsAppModal'
 
 export const metadata = {
     title: 'Listado a Encuestar - Firplak',
@@ -66,9 +68,12 @@ export default async function ListadoPersonasPage() {
                 <div className="space-y-4 animate-fade-in-up">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <h2 className="text-xl font-bold text-gray-900 tracking-tight">Personas a las que se les enviará la encuesta</h2>
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">
-                            {personasValidas.length} registros este mes
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">
+                                {personasValidas.length} registros este mes
+                            </span>
+                            <TestWhatsAppModal />
+                        </div>
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
@@ -81,12 +86,13 @@ export default async function ListadoPersonasPage() {
                                         <th className="px-5 py-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Contacto / Correo Cliente Final</th>
                                         <th className="px-5 py-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Fecha Cierre</th>
                                         <th className="px-5 py-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
+                                        <th className="px-5 py-4 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {personasValidas.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="text-center py-16 px-4">
+                                            <td colSpan={6} className="text-center py-16 px-4">
                                                 <div className="text-gray-300 mb-3">
                                                     <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1" className="mx-auto">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -123,6 +129,12 @@ export default async function ListadoPersonasPage() {
                                                     <span className="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
                                                         CERRADO
                                                     </span>
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    <SendWhatsAppButton 
+                                                        consecutivo={persona.consecutivo || persona.id.toString()}
+                                                        telefono={persona.Consumidores?.telefono || persona.Consumidores?.celular || persona.telefono || persona.celular}
+                                                    />
                                                 </td>
                                             </tr>
                                         ))

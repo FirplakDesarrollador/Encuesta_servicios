@@ -38,7 +38,7 @@ export async function sendWhatsAppMessage(to: string, message: string) {
   return data;
 }
 
-export async function sendWhatsAppTemplate(to: string, templateName: string, languageCode: string = 'es') {
+export async function sendWhatsAppTemplate(to: string, templateName: string, languageCode: string = 'es', components?: any[]) {
   const WHATSAPP_API_TOKEN = process.env.WHATSAPP_API_TOKEN;
   const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
@@ -56,7 +56,8 @@ export async function sendWhatsAppTemplate(to: string, templateName: string, lan
       name: templateName,
       language: {
         code: languageCode
-      }
+      },
+      ...(components && { components })
     }
   };
 

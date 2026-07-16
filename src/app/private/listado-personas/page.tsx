@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import SendWhatsAppButton from './SendWhatsAppButton'
 import TestWhatsAppModal from './TestWhatsAppModal'
+import ExportExcelButton from './ExportExcelButton'
 
 export const metadata = {
     title: 'Listado a Encuestar - Firplak',
@@ -33,6 +34,12 @@ export default async function ListadoPersonasPage() {
     }
 
     const personasValidas = personas?.filter(persona => {
+        // Ignorar los servicios que son de tipo "pedido referencia"
+        const tipoServicio = persona.tipo_de_servicio?.toUpperCase() || '';
+        if (tipoServicio.includes('PEDIDO_REFERENCIA') || tipoServicio.includes('PEDIDO REFERENCIA')) {
+            return false;
+        }
+
         const telefono = persona.Consumidores?.telefono || persona.Consumidores?.celular || persona.telefono || persona.celular;
         const correo = persona.Consumidores?.correo_electronico || persona.Consumidores?.correo || persona.Consumidores?.email || persona.correo || persona.email;
         
@@ -72,6 +79,7 @@ export default async function ListadoPersonasPage() {
                             <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-full border border-indigo-100">
                                 {personasValidas.length} registros este mes
                             </span>
+                            <ExportExcelButton data={personasValidas} />
                             <TestWhatsAppModal />
                         </div>
                     </div>
